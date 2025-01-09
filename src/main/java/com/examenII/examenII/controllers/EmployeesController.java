@@ -26,7 +26,7 @@ public class EmployeesController {
         this.employeesService = employeesService;
     }
 
-    @GetMapping("/")
+    @GetMapping
     @PreAuthorize("hasAuthority('READ')")
     public ResponseEntity<List<EmployeeDTO>> getAllEmployees() {
         return ResponseEntity.ok(employeesService.getAllEmployees());
