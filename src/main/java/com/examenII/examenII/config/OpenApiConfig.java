@@ -2,9 +2,9 @@ package com.examenII.examenII.config;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.License;
-import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -14,8 +14,11 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+import java.util.Arrays;
+import io.swagger.v3.oas.models.servers.Server;
+import java.util.List;
 
+@Configuration
 public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
@@ -24,8 +27,9 @@ public class OpenApiConfig {
                         .title("Employees API")
                         .version("1.0")
                         .description("API para gestionar Employees con seguridad por roles"))
+                .servers(Arrays.asList(new Server().url("/")))
                 .addSecurityItem(new SecurityRequirement().addList("basicAuth"))
-                .components(new io.swagger.v3.oas.models.Components()
+                .components(new Components()
                         .addSecuritySchemes("basicAuth", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("basic")));
