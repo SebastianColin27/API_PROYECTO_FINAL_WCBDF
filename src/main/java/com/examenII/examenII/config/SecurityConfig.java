@@ -22,6 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,16 +33,18 @@ import java.util.List;
 @EnableMethodSecurity // Permite el uso de @PreAuthorize en métodos
 public class SecurityConfig {
 
-    private final AuthenticationConfiguration authenticationConfiguration;
 
-    // Constructor injection instead of @Autowired
-    public SecurityConfig(AuthenticationConfiguration authenticationConfiguration) {
-        this.authenticationConfiguration = authenticationConfiguration;
-    }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.cors().configurationSource(corsConfigurationSource())
+                .and()
+                .csrf().disable()
+                .authorizeHttpRequests(auth->auth.anyRequest().authenticated())
+                .httpBasic();
+        return http.build();
+
+          /*   return httpSecurity
                 .csrf().disable() // Deshabilitar CSRF para facilitar pruebas (habilítalo en producción)
                 .httpBasic(Customizer.withDefaults()) // Autenticación básica
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless para APIs REST
@@ -53,13 +58,21 @@ public class SecurityConfig {
                     // Permitir acceso al resto de los endpoints solo a usuarios autenticados
                     auth.anyRequest().authenticated();
                 })
-                .build();
+                .build();*/
     }
 
+
     @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.addAllowedOrigin("*");
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
@@ -75,12 +88,13 @@ public class SecurityConfig {
         return NoOpPasswordEncoder.getInstance();
     }
 
+
     @Bean
     public UserDetailsService userDetailsService() {
         // Create users with encoded passwords
         UserDetails admin = User.withUsername("admin")
                 .password(passwordEncoder().encode("admin1234"))
-                .authorities("READ", "CREATE-USER", "UPDATE", "DELETE")
+                .authorities("READ", "CREATE", "UPDATE", "DELETE")
                 .build();
 
         UserDetails user1 = User.withUsername("user")
@@ -100,7 +114,7 @@ public class SecurityConfig {
 
         UserDetails developer = User.withUsername("developer")
                 .password(passwordEncoder().encode("developer1234"))
-                .authorities("READ", "WRITE", "UPDATE", "DELETE", "CREATE-USER")
+                .authorities("READ", "WRITE", "UPDATE", "DELETE", "CREATE")
                 .build();
 
         UserDetails analyst = User.withUsername("analista")

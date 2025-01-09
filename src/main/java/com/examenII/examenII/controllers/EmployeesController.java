@@ -1,18 +1,16 @@
 package com.examenII.examenII.controllers;
 
-import com.examenII.examenII.models.EmployeesEntity;
+import com.examenII.examenII.dto.EmployeeDTO;
 import com.examenII.examenII.services.EmployeesService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.hateoas.Link;
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/v1/employees")
@@ -23,8 +21,48 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class EmployeesController {
     private EmployeesService employeesService;
 
+    @Autowired
+    public EmployeesController(EmployeesService employeesService) {
+        this.employeesService = employeesService;
+    }
 
-    @GetMapping
+    @GetMapping("/")
+    @PreAuthorize("hasAuthority('READ')")
+    public ResponseEntity<List<EmployeeDTO>> getAllEmployees() {
+        return ResponseEntity.ok(employeesService.getAllEmployees());
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('READ')")
+    public ResponseEntity<EmployeeDTO> getEmployeeById(@PathVariable Long id) {
+        EmployeeDTO log = employeesService.getEmployeeById(id);
+        return log != null ? ResponseEntity.ok(log) : ResponseEntity.notFound().build();
+    }
+
+    @PostMapping
+    @PreAuthorize("hasAuthority('CREATE')")
+    public ResponseEntity<EmployeeDTO> createEmployee(@RequestBody  EmployeeDTO employeeDTO) {
+        return ResponseEntity.ok( employeesService.createEmployee(employeeDTO));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('UPDATE')")
+    public ResponseEntity<EmployeeDTO> updateEmployee(@PathVariable Long id, @RequestBody EmployeeDTO employeeDTO) {
+        EmployeeDTO updatedEmployee = employeesService.updateEmployee(id, employeeDTO);
+        return updatedEmployee != null ? ResponseEntity.ok(updatedEmployee) : ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('DELETE')")
+    public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
+        employeesService.deleteEmployee(id);
+        return ResponseEntity.ok().build();
+    }
+
+}
+
+
+ /*   @GetMapping
     public ResponseEntity<CustomResponse<List<EmployeesEntity>>> getEmployee() {
         List<EmployeesEntity> employees;
         Link selfLink = linkTo(methodOn(EmployeesController.class).getEmployee()).withSelfRel();
@@ -117,4 +155,5 @@ public class EmployeesController {
                     .body(new CustomResponse<>(0, "Error al eliminar un Employee", null, links));
         }
     }
-}
+    }*/
+
